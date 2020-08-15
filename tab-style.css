@@ -1,0 +1,70 @@
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #212121;
+    color: #B5B5B5;
+  }
+  
+  /* Style the buttons that are used to open the tab content */
+  .tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+  }
+  
+  /* Change background color of buttons on hover */
+  .tab button:hover {
+    background-color: #ddd;
+  }
+  
+  /* Create an active/current tablink class */
+  .tab button.active {
+    background-color: #ccc;
+  }
+  
+  /* Style the tab content */
+  .tabcontent {
+    display: none;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
+
+  /* changing fonts of tables */
+  .tabulator{
+    font-family: Helvetica;
+    font-size: 14;
+  }
+
+  /* adding style to margin boxex in usdt and btc tabs */
+  .boxedmargin{
+    padding-left: 1px;
+    padding-right: 1px;
+    margin-left: 4px;
+    margin-right: 4px;
+    font-size: 12px;
+    border-radius: 4px;
+    line-height: 14px;
+    /*color: rgb(122, 121, 117); */
+    color: #005500;
+    border: 1px solid #008000;   
+    display: inline;
+  }
+
+  /* adding style to the percentage change */ 
+  .positivepercentage{
+    color: green;
+  }
+  .negativepercentage{
+    color: red;
+  }
+  /*
+  .negativepercentage:first-letter{
+    margin-right: +2%;
+  }
+  */
