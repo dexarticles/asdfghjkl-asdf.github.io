@@ -1,2 +1,4 @@
-This is a demo file
-testing purpose
+apt-get update
+apt-get install -y smartmontools
+smartctl -a /dev/sda
+smartctl -a /dev/sdb
