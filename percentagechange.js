@@ -252,6 +252,16 @@
             btctable.removeFilter("margin", ">", 0);
         }
     };
+    // function called when clicking on usdt funding rate box
+    function fundingrateclick(){
+        var fundingratecheckbox = document.getElementById("fundingrate-usdt");
+        if(fundingratecheckbox.checked == true){
+            usdttable.setFilter("has_futures", "=", 1);
+        }
+        else{
+            usdttable.removeFilter("has_futures", "=", 1);
+        }
+    }
     var usdttabledata = []
     var usdttablecount = 0 
     var btctabledata = []
@@ -325,11 +335,25 @@
             },
         },
         {
-            title: "Funding Rate",
+            title: "<input id='fundingrate-usdt' type='checkbox' name='usdt-fundingrate'> <label for='usdt-fundingrate'> Funding rate </label>",
             field: "funding_rate",
             sorter: "number",
             formatter: "money",
             formatterParams: {symbol: " %", symbolAfter: true, precision: 3},
+            headerClick: fundingrateclick,
+        },
+        {
+            title: "has_futures",
+            field: "has_futures", 
+            visible: false,
+            // formatter: function(cell, formatterParams, onRendered){
+            //     if(cell.getValue() != undefined){
+            //         return "<div class='boxedmargin'>" + cell.getValue() + "x</div>";
+            //     }
+            //     else{
+            //         return "";
+            //     }
+            // },
         },
         ],
         index: "ticker",
@@ -438,7 +462,7 @@
                     usdttablecount++
                     // get margin amount 
                     var marginamount = margincoins[all_pairs[i].symbol]
-                    usdttable.addData({id:usdttablecount, margin:marginamount, ticker:all_pairs[i].symbol.toUpperCase(), percentage:0, volume:0, price:all_pairs[i].price, funding_Date: 0}, false)
+                    usdttable.addData({id:usdttablecount, margin:marginamount, ticker:all_pairs[i].symbol.toUpperCase(), percentage:0, volume:0, price:all_pairs[i].price, has_futures: 0}, false)
                 }
                 if(all_pairs[i].symbol.endsWith("BTC")){
                     all_btcpairs.push(all_pairs[i].symbol)
@@ -487,7 +511,7 @@
                     // get margin amount 
                     var marginamount = margincoins[String(obj.s)]
                     // updating table row using symbol as index 
-                    usdttable.updateData([{ticker:obj.s, margin:marginamount, percentage:p, volume:(obj.k.v)*(obj.k.c), price:obj.k.c}])            
+                    usdttable.updateData([{ticker:obj.s, margin:marginamount, percentage:p, volume:(obj.k.v)*(obj.k.c), price:obj.k.c}])
                 }     
             }
             else{
@@ -586,6 +610,8 @@
             // adding all futures coins to subscribe params 
             for(let i = 0; i<futures_coins.length; i++){
                 request.params.push(futures_coins[i].toLowerCase()+"@markPrice");
+                // make funding rate to 0 initially
+                usdttable.updateData([{ticker:futures_coins[i], has_futures:1}])
             }
             socket_usdt_funding.send(JSON.stringify(request));
         }
@@ -594,7 +620,7 @@
             // console.log(obj);
             // when funding rate is received
             if(String(obj.e) == "markPriceUpdate"){
-                usdttable.updateData([{ticker:obj.s, funding_rate:(obj.r)*100}])
+                usdttable.updateData([{ticker:obj.s, funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}])
             }
             else{
                 console.log(event)
