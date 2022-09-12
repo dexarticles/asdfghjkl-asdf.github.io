@@ -612,6 +612,7 @@
                 request.params.push(futures_coins[i].toLowerCase()+"@markPrice");
                 // make funding rate to 0 initially
                 usdttable.updateData([{ticker:futures_coins[i], has_futures:1}])
+		usdttable.updateData([{ticker:futures_coins[i].replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), has_futures:1}]); // some numbers have to be removed, others kept, LUNA2 vs API3
             }
             socket_usdt_funding.send(JSON.stringify(request));
         }
@@ -621,6 +622,7 @@
             // when funding rate is received
             if(String(obj.e) == "markPriceUpdate"){
                 usdttable.updateData([{ticker:obj.s, funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}])
+		usdttable.updateData([{ticker:obj.s.replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}]); // some numbers have to be removed, others kept, LUNA2 vs API3
             }
             else{
                 console.log(event)
