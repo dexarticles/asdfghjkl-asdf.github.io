@@ -595,10 +595,11 @@
         for (let i = 0; i < temp.length; i++){
             futures_coins.push(String(temp[i].symbol));
         }
-        // create socket for funding rate
-        let socket_usdt_funding = new WebSocket("wss://fstream.binance.com/ws");
-        socket_usdt_funding.onopen = function(e){
-            console.log("[open] Web Socket Connection established - Funding rate Socket");
+        // EACH SOCKET REQUEST CAN SUBSCRIBE TO A LIMITED NUMBER OF PAIRS, SO CREATE TWO SOCKETS TO COVER ALL PAIRS
+        // create socket1 for funding rate
+        let socket_usdt_funding1 = new WebSocket("wss://fstream.binance.com/ws");
+        socket_usdt_funding1.onopen = function(e){
+            console.log("[open] Web Socket Connection established - Funding rate Socket1");
             var request = {
                 "method": "SUBSCRIBE",
                 "params":
@@ -608,15 +609,15 @@
             }
             console.log(futures_coins);
             // adding all futures coins to subscribe params 
-            for(let i = 0; i<futures_coins.length; i++){
+            for(let i = 0; i<(futures_coins.length)/2; i++){
                 request.params.push(futures_coins[i].toLowerCase()+"@markPrice");
                 // make funding rate to 0 initially
                 usdttable.updateData([{ticker:futures_coins[i], has_futures:1}]);
 		usdttable.updateData([{ticker:futures_coins[i].replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), has_futures:1}]); // some numbers have to be removed, others kept, LUNA2 vs API3
             }
-            socket_usdt_funding.send(JSON.stringify(request));
+            socket_usdt_funding1.send(JSON.stringify(request));
         }
-        socket_usdt_funding.onmessage = function(event){
+        socket_usdt_funding1.onmessage = function(event){
             var obj = JSON.parse(event.data)
             // console.log(obj);
             // when funding rate is received
@@ -628,15 +629,59 @@
                 console.log(event)
             }
         }
-        socket_usdt_funding.onclose = function(event){
+        socket_usdt_funding1.onclose = function(event){
             if (event.wasClean) {
-                alert(`[close] Web socket Connection closed cleanly, code=${event.code} reason=${event.reason} - Funding rate socket`);
+                alert(`[close] Web socket Connection closed cleanly, code=${event.code} reason=${event.reason} - Funding rate socket1`);
             } else {
-                alert('[close] Web socket Connection died - Funding rate socket');
+                alert('[close] Web socket Connection died - Funding rate socket1');
             }
         }
-        socket_usdt_funding.onerror = function(error){
-            alert(`Web socket error: [error] ${error.message} - Funding rate socket`)
+        socket_usdt_funding1.onerror = function(error){
+            alert(`Web socket error: [error] ${error.message} - Funding rate socket1`)
+        }
+
+        // create socket2 for funding rate
+        let socket_usdt_funding2 = new WebSocket("wss://fstream.binance.com/ws");
+        socket_usdt_funding2.onopen = function(e){
+            console.log("[open] Web Socket Connection established - Funding rate Socket1");
+            var request = {
+                "method": "SUBSCRIBE",
+                "params":
+                [
+                ],
+                "id": 1
+            }
+            console.log(futures_coins);
+            // adding all futures coins to subscribe params 
+            for(let i = (futures_coins.length)/2; i<futures_coins.length; i++){
+                request.params.push(futures_coins[i].toLowerCase()+"@markPrice");
+                // make funding rate to 0 initially
+                usdttable.updateData([{ticker:futures_coins[i], has_futures:1}]);
+                usdttable.updateData([{ticker:futures_coins[i].replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), has_futures:1}]); // some numbers have to be removed, others kept, LUNA2 vs API3
+            }
+            socket_usdt_funding2.send(JSON.stringify(request));
+        }
+        socket_usdt_funding2.onmessage = function(event){
+            var obj = JSON.parse(event.data)
+            // console.log(obj);
+            // when funding rate is received
+            if(String(obj.e) == "markPriceUpdate"){
+                usdttable.updateData([{ticker:obj.s, funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}]);
+                usdttable.updateData([{ticker:obj.s.replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}]); // some numbers have to be removed, others kept, LUNA2 vs API3
+            }
+            else{
+                console.log(event)
+            }
+        }
+        socket_usdt_funding2.onclose = function(event){
+            if (event.wasClean) {
+                alert(`[close] Web socket Connection closed cleanly, code=${event.code} reason=${event.reason} - Funding rate socket2`);
+            } else {
+                alert('[close] Web socket Connection died - Funding rate socket2');
+            }
+        }
+        socket_usdt_funding2.onerror = function(error){
+            alert(`Web socket error: [error] ${error.message} - Funding rate socket2`)
         } 
     }
     // check if current tab is open or not 
