@@ -474,9 +474,10 @@
             }       
         }  
         // websockets to update data of USDT pairs
-        let socket_usdt = new WebSocket("wss://stream.binance.com:9443/ws")
-        socket_usdt.onopen = function(e){
-            console.log("[open] Web Socket Connection established - USDT Socket");
+        // first usdt socket
+        let socket_usdt1 = new WebSocket("wss://stream.binance.com:9443/ws")
+        socket_usdt1.onopen = function(e){
+            console.log("[open] Web Socket Connection established - USDT Socket 1");
             var request = {
                 "method": "SUBSCRIBE",
                 "params":
@@ -488,12 +489,13 @@
             /*for(let i = 0; i<all_btcpairs.length; i++){
                 request.params.push(all_btcpairs[i].toLowerCase()+"@kline_1d")
             }*/
-            for(let i = 0; i<all_usdtpairs.length; i++){
+            for(let i = 0; i<Math.floor(all_usdtpairs.length/2); i++){
                 request.params.push(all_usdtpairs[i].toLowerCase()+"@kline_1d")
             }
-            socket_usdt.send(JSON.stringify(request));
+            socket_usdt1.send(JSON.stringify(request));
         }
-        socket_usdt.onmessage = function(event){
+        socket_usdt1.onmessage = function(event){
+            // console.log ('message received on first usdt socket')
             var obj = JSON.parse(event.data)
             // consider response when it has coin data
             if(!obj.hasOwnProperty("result")){
@@ -515,19 +517,77 @@
                 }     
             }
             else{
-                console.log(event)
+                // console.log(event)
             }
         }
-        socket_usdt.onclose = function(event){
+        socket_usdt1.onclose = function(event){
             if (event.wasClean) {
-                alert(`[close] Web socket Connection closed cleanly, code=${event.code} reason=${event.reason} - USDT socket`);
+                alert(`[close] Web socket Connection closed cleanly, code=${event.code} reason=${event.reason} - USDT socket 1`);
             } else {
-                alert('[close] Web socket Connection died - USDT socket');
+                alert('[close] Web socket Connection died - USDT socket 1');
             }
         }
-        socket_usdt.onerror = function(error){
-            alert(`Web socket error: [error] ${error.message} - USDT socket`)
+        socket_usdt1.onerror = function(error){
+            alert(`Web socket error: [error] ${error.message} - USDT socket 1`)
         }
+
+        // second usdt socket
+        let socket_usdt2 = new WebSocket("wss://stream.binance.com:9443/ws")
+        socket_usdt2.onopen = function(e){
+            console.log("[open] Web Socket Connection established - USDT Socket 2");
+            var request = {
+                "method": "SUBSCRIBE",
+                "params":
+                [
+                ],
+                "id": 1
+                }
+            // adding all coins to subscribe params 
+            /*for(let i = 0; i<all_btcpairs.length; i++){
+                request.params.push(all_btcpairs[i].toLowerCase()+"@kline_1d")
+            }*/
+            for(let i = Math.floor(all_usdtpairs.length/2); i<all_usdtpairs.length; i++){
+                request.params.push(all_usdtpairs[i].toLowerCase()+"@kline_1d")
+            }
+            socket_usdt2.send(JSON.stringify(request));
+        }
+        socket_usdt2.onmessage = function(event){
+            // console.log ('message received on first usdt socket')
+            var obj = JSON.parse(event.data)
+            // consider response when it has coin data
+            if(!obj.hasOwnProperty("result")){
+                /*if(String(obj.s).endsWith("BTC")){
+                    // calculating percentage 
+                    var p = ((parseFloat(obj.k.c) - parseFloat(obj.k.o))/parseFloat(obj.k.o))*100
+                    p = p.toFixed(2)
+                    // updating table row using symbol as index 
+                    btctable.updateData([{ticker:obj.s, margin:margincoins[String(obj.s)], percentage:p, volume:(obj.k.v)*(obj.k.c), price:obj.k.c}])
+                }*/  
+                if(String(obj.s).endsWith("USDT")){
+                    // calculating percentage 
+                    var p = ((parseFloat(obj.k.c) - parseFloat(obj.k.o))/parseFloat(obj.k.o))*100
+                    p = p.toFixed(2)
+                    // get margin amount 
+                    var marginamount = margincoins[String(obj.s)]
+                    // updating table row using symbol as index 
+                    usdttable.updateData([{ticker:obj.s, margin:marginamount, percentage:p, volume:(obj.k.v)*(obj.k.c), price:obj.k.c}])
+                }     
+            }
+            else{
+                // console.log(event)
+            }
+        }
+        socket_usdt2.onclose = function(event){
+            if (event.wasClean) {
+                alert(`[close] Web socket Connection closed cleanly, code=${event.code} reason=${event.reason} - USDT socket 2`);
+            } else {
+                alert('[close] Web socket Connection died - USDT socket 2');
+            }
+        }
+        socket_usdt2.onerror = function(error){
+            alert(`Web socket error: [error] ${error.message} - USDT socket 2`)
+        }
+
 		// web socket to update data of BTC pairs
 		let socket_btc = new WebSocket("wss://stream.binance.com:9443/ws")
         socket_btc.onopen = function(e){
@@ -548,7 +608,10 @@
             }*/
             socket_btc.send(JSON.stringify(request));
         }
+
+        // btc socket
         socket_btc.onmessage = function(event){
+            // console.log ('message received on btc socket')
             var obj = JSON.parse(event.data)
             // consider response when it has coin data
             if(!obj.hasOwnProperty("result")){
@@ -570,7 +633,7 @@
                 }*/     
             }
             else{
-                console.log(event)
+                // console.log(event)
             }
         }
         socket_btc.onclose = function(event){
@@ -609,7 +672,7 @@
             }
             console.log(futures_coins);
             // adding all futures coins to subscribe params 
-            for(let i = 0; i<(futures_coins.length)/2; i++){
+            for(let i = 0; i<Math.floor(futures_coins.length/2); i++){
                 request.params.push(futures_coins[i].toLowerCase()+"@markPrice");
                 // make funding rate to 0 initially
                 usdttable.updateData([{ticker:futures_coins[i], has_futures:1}]);
@@ -618,6 +681,7 @@
             socket_usdt_funding1.send(JSON.stringify(request));
         }
         socket_usdt_funding1.onmessage = function(event){
+            // console.log('message received on first funding socket')
             var obj = JSON.parse(event.data)
             // console.log(obj);
             // when funding rate is received
@@ -626,7 +690,7 @@
 		usdttable.updateData([{ticker:obj.s.replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}]); // some numbers have to be removed, others kept, LUNA2 vs API3
             }
             else{
-                console.log(event)
+                // console.log(event)
             }
         }
         socket_usdt_funding1.onclose = function(event){
@@ -643,7 +707,7 @@
         // create socket2 for funding rate
         let socket_usdt_funding2 = new WebSocket("wss://fstream.binance.com/ws");
         socket_usdt_funding2.onopen = function(e){
-            console.log("[open] Web Socket Connection established - Funding rate Socket1");
+            console.log("[open] Web Socket Connection established - Funding rate Socket 2");
             var request = {
                 "method": "SUBSCRIBE",
                 "params":
@@ -653,7 +717,7 @@
             }
             console.log(futures_coins);
             // adding all futures coins to subscribe params 
-            for(let i = (futures_coins.length)/2; i<futures_coins.length; i++){
+            for(let i = Math.floor(futures_coins.length/2); i<futures_coins.length; i++){
                 request.params.push(futures_coins[i].toLowerCase()+"@markPrice");
                 // make funding rate to 0 initially
                 usdttable.updateData([{ticker:futures_coins[i], has_futures:1}]);
@@ -662,6 +726,7 @@
             socket_usdt_funding2.send(JSON.stringify(request));
         }
         socket_usdt_funding2.onmessage = function(event){
+            // console.log('message received on second funding socket')
             var obj = JSON.parse(event.data)
             // console.log(obj);
             // when funding rate is received
@@ -670,7 +735,7 @@
                 usdttable.updateData([{ticker:obj.s.replace(/^\d+/,'').replace(/\d+(?=USDT$)/, ''), funding_rate:(obj.r)*100, fundingrate:(obj.r)*100}]); // some numbers have to be removed, others kept, LUNA2 vs API3
             }
             else{
-                console.log(event)
+                // console.log(event)
             }
         }
         socket_usdt_funding2.onclose = function(event){
@@ -693,7 +758,7 @@
         is_tab_active = false; 
     }; 
     
-    // sorting tables every 2 seconds 
+    // sorting tables every 3 seconds 
     setInterval(function(){
         // if current tab is open then sort table 
         if (is_tab_active == true){
@@ -710,6 +775,6 @@
                 usdttable.setSort(currentsortercolumn, currentsortdirection)
             }
         }
-    }, 2000);
+    }, 3000);
 
 })();
